@@ -1,0 +1,72 @@
+---
+title: "Comparison of Coronavirus infection and deaths per country: how far behind Italy are we?"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+The goal of this script is to compare the chronology of infection/death caused per country and use Italy to predict the situation in other countries, notably in France.
+
+```{r, load libraries, include=F}
+library(ggplot2)
+library(gplots)
+```
+
+```{r, load dataset, echo=F}
+# infections
+i <- read.table("csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv", sep=",", h=T)
+# deaths
+d <- read.table("csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv", sep=",", h=T)
+# Recoveries
+r <- read.table("csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv", sep=",", h=T)
+
+dates <- as.Date(gsub(".","/",gsub("X","",colnames(d)[6:ncol(d)]), fixed=T), "%m/%d/%y")
+dates <- as.Date(format(dates,"%d/%m/%y"),"%d/%m/%y")
+```
+
+Let's compare the contagion and death curves between countries.
+```{r, prep function for plotting, include=F}
+plot_dataset <- function(table, title, date_indexes=date_indexes){
+  color_country <- c(Italy="red", France="blue", Germany="black", Spain="orange")
+
+# Plot points
+  plot_country <- function(country, date_indexes=date_indexes){
+    sel <- which(table$Country.Region==country)
+    points(dates[date_indexes-5],table[sel,date_indexes], xlab="Date", ylab="Deaths", type="b", pch=20, cex=0.6, col=color_country[country]) #, main=paste(d$Province.State[i], d$Country.Region[i])
+# axis
+  }
+  plot_countries <- function(countries, date_indexes=date_indexes){
+    sels <- which(d$Country.Region%in%countries)
+    ymax=max(table[sels,date_indexes])
+    par(xaxt="n")
+    plot(dates[date_indexes-5],table[1,date_indexes], xlab="Date", ylab=title, type="n", pch=20, cex=0.6, ylim=c(0,ymax), main=title)
+    lablist<-dates[date_indexes-5]
+    axis(1, at=seq(1, length(dates[date_indexes-5]), by=1), labels = FALSE)
+    text(dates[date_indexes-5], par("usr")[3]-ymax/15, labels = lablist, srt = 90, pos = 1, xpd = TRUE, cex=0.5)
+    for (country in countries){
+     plot_country(country, date_indexes=date_indexes)
+    }
+   legend("topleft", legend=countries, col=color_country[countries], pch=20, text.col=color_country[countries])
+  }
+
+  plot_countries(c("Italy","France","Germany", "Spain"), date_indexes=date_indexes)
+}
+```
+
+```{r, plot coronavirus graphs for countries, echo=F}
+plot_dataset(table=i, title="Infections", date_indexes=19:ncol(d))
+plot_dataset(table=d, title="Deaths", date_indexes=19:ncol(d))
+```
+
+France and Italy have (roughly) the same number of inhabitants, so the absolute numbers of cases can be directly compared. France seems to be X days behind Italy. If we delay Italy by X days, how do the curves compare between countries?
+
+```{r, Delay Italy to mimic France}
+
+
+```
+
